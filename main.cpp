@@ -83,10 +83,30 @@ int main()
 			else
 			{
 				Mat H;
-				//pointsMatch p(preGray, curGray, true);
-				//if (p.getKeyPoints())
+				pointsMatch p(preGray, curGray, true);
+				if (p.getKeyPoints())
+				{
+					//H = findHomography(p.getPoints(p.p2), p.getPoints(p.p1), CV_LMEDS);
+					H = estimateRigidTransform(p.getPoints(p.p2), p.getPoints(p.p1), true);
+					if (!isInitial)	//初始化
+					{
+						if (gModel.initial(curGray))
+							isInitial = true;
+					}
+					else  //更新
+					{
+						if (!H.empty())
+						{
+							GaussianBlur(curGray, curGray, Size(3, 3), 0, 0);
+							medianBlur(curGray, curGray, 5);
+							gModel.updateModel(curGray, H, dst);
+						}
+						//p.showKeyPoints(dst);
+					}
+				}
+
+				//if (calH(curGray, preGray, H))
 				//{
-				//	H = findHomography(p.getPoints(p.p2), p.getPoints(p.p1), CV_LMEDS);
 				//	if (!isInitial)	//初始化
 				//	{
 				//		if (gModel.initial(curGray))
@@ -95,22 +115,29 @@ int main()
 				//	else  //更新
 				//	{
 				//		gModel.updateModel(curGray, H, dst);
-				//		//p.showKeyPoints(dst);
+				//		
 				//	}
+				//	//Mat calibFrame;
+				//	//warpAffine(curGray, calibFrame, H, curGray.size());
+				//	//Mat dif;
+				//	//absdiff(calibFrame, preGray, dif);
+				//	//imshow("dif", dif);
+				//	//Mat srcDif;
+				//	//absdiff(curGray, preGray, srcDif);
+				//	//imshow("srcDif", srcDif);
 				//}
-				if (calH(curGray, preGray, H))
-				{
-					if (!isInitial)	//初始化
-					{
-						if (gModel.initial(curGray))
-							isInitial = true;
-					}
-					else  //更新
-					{
-						gModel.updateModel(curGray, H, dst);
-						
-					}
-				}
+
+				//H = estimateRigidTransform(curGray, preGray, true);
+				//if (!isInitial)	//初始化
+				//{
+				//	if (gModel.initial(curGray))
+				//		isInitial = true;
+				//}
+				//else  //更新
+				//{
+				//	gModel.updateModel(curGray, H, dst);
+
+				//}
 			}
 			
 			if (!dst.empty())

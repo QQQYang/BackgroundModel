@@ -21,6 +21,20 @@ extern Mat lap;
 using namespace cv;
 using namespace std;
 
+//放射变换
+void getPointAffinedPos(Point2f src, Mat T, Point2f& pre)
+{
+	double* rowData = T.ptr<double>(0);
+	//cout << T << endl;
+	pre.x = src.x * rowData[0] + src.y * rowData[1] + rowData[2];
+	rowData = T.ptr<double>(1);
+	pre.y = src.x * rowData[0] + src.y * rowData[1] + rowData[2];
+
+	//pre.x = src.x * T.at<double>(0, 0) + src.y * T.at<double>(0, 1) + T.at<double>(0, 2);
+	//pre.y = src.x * T.at<double>(1, 0) + src.y * T.at<double>(1, 1) + T.at<double>(1, 2);
+}
+
+
 //计算N*N区域的平均值
 float GaussModel::avrNN(Mat src, Point2f p, uchar N)
 {
@@ -69,8 +83,6 @@ float GaussModel::varNN(Mat src, Point2f p, uchar N, bool flag)
 	}
 	return var;
 }
-
-//判断一个区域的前景点与背景点
 
 
 //三个参数的顺序:均值， 方差， 更新速率
@@ -122,42 +134,45 @@ void GaussModel::updateModel(Mat cur, Mat H, Mat& dst)
 		for (size_t j = 0; j < gm.cols; j++)
 		{
 			Point2f bkReal;
-			Mat srcMat = Mat::zeros(3, 1, CV_64FC1);
-			srcMat.at<double>(0, 0) = j*N + N / 2;
-			srcMat.at<double>(0, 0) = i*N + N / 2;
-			srcMat.at<double>(2, 0) = 1.0;
-			Mat warpMat = H * srcMat;
-			bkReal.x = warpMat.at<double>(0, 0) / warpMat.at<double>(2, 0);
-			bkReal.y = warpMat.at<double>(1, 0) / warpMat.at<double>(2, 0);
+			//Mat srcMat = Mat::zeros(3, 1, CV_64FC1);
+			//srcMat.at<double>(0, 0) = j*N + N / 2;
+			//srcMat.at<double>(0, 0) = i*N + N / 2;
+			//srcMat.at<double>(2, 0) = 1.0;
+			//Mat warpMat = H * srcMat;			
+			//bkReal.x = warpMat.at<double>(0, 0) / warpMat.at<double>(2, 0);
+			//bkReal.y = warpMat.at<double>(1, 0) / warpMat.at<double>(2, 0);
 
-			if ((bkReal.x - N / 2) >= 0 && (bkReal.x - N / 2) < gm.cols - 1 && (bkReal.y - N / 2) >= 0 && (bkReal.y - N / 2) < gm.rows - 1)
+			getPointAffinedPos(Point2f(j*N + (float)(N - 1) / 2, i*N + (float)(N - 1) / 2), H, bkReal);
+
+			if ((bkReal.x - (float)(N - 1) / 2) >= 0 && ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N) <= gm.cols - 1 && (bkReal.y - (float)(N - 1) / 2) >= 0 && ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N) <= gm.rows - 1)
 			{
 				float wk[4] = { 0.f }; //权向量
 				Rect2f neighbor[5];
-				neighbor[0] = Rect2f((bkReal.x - N / 2), (bkReal.y - N / 2), N, N);
-				neighbor[1] = Rect2f(floor((bkReal.x - N / 2) / (float)N) * N, floor((bkReal.y - N / 2) / (float)N) * N, N, N);
-				neighbor[2] = Rect2f(floor((bkReal.x - N / 2) / (float)N) * N, ceilf((bkReal.y - N / 2) / (float)N) * N, N, N);
-				neighbor[3] = Rect2f(ceilf((bkReal.x - N / 2) / (float)N) * N, floor((bkReal.y - N / 2) / (float)N) * N, N, N);
-				neighbor[4] = Rect2f(ceilf((bkReal.x - N / 2) / (float)N) * N, ceilf((bkReal.y - N / 2) / (float)N) * N, N, N);
+				neighbor[0] = Rect2f((bkReal.x - (float)(N - 1) / 2), (bkReal.y - (float)(N - 1) / 2), N, N);
+				neighbor[1] = Rect2f(floor((bkReal.x - (float)(N - 1) / 2) / (float)N) * N, floor((bkReal.y - (float)(N - 1) / 2) / (float)N) * N, N, N);
+				neighbor[2] = Rect2f(floor((bkReal.x - (float)(N - 1) / 2) / (float)N) * N, ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N) * N, N, N);
+				neighbor[3] = Rect2f(ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N) * N, floor((bkReal.y - (float)(N - 1) / 2) / (float)N) * N, N, N);
+				neighbor[4] = Rect2f(ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N) * N, ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N) * N, N, N);
 
 				wk[0] = (neighbor[1] & neighbor[0]).area() / (N*N);
 				wk[1] = (neighbor[2] & neighbor[0]).area() / (N*N);
 				wk[2] = (neighbor[3] & neighbor[0]).area() / (N*N);
 				wk[3] = 1 - wk[0] - wk[1] - wk[2];
-				gm.at<Vec3f>(i, j).val[0] = wk[0] * gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[0]
-					+ wk[1] * gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[0]
-					+ wk[2] * gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[0]
-					+ wk[3] * gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[0];
 
-				gm.at<Vec3f>(i, j).val[1] = wk[0] * (gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[1] + gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[0] * gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[0] - gm.at<Vec3f>(i, j).val[0] * gm.at<Vec3f>(i, j).val[0])
-					+ wk[1] * (gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[1] + gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[0] * gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[0] - gm.at<Vec3f>(i, j).val[0] * gm.at<Vec3f>(i, j).val[0])
-					+ wk[2] * (gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[1] + gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[0] * gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[0] - gm.at<Vec3f>(i, j).val[0] * gm.at<Vec3f>(i, j).val[0])
-					+ wk[3] * (gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[1] + gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[0] * gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[0] - gm.at<Vec3f>(i, j).val[0] * gm.at<Vec3f>(i, j).val[0]);
+				gm.at<Vec3f>(i, j).val[0] = wk[0] * gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0]
+					+ wk[1] * gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0]
+					+ wk[2] * gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0]
+					+ wk[3] * gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0];
 
-				gm.at<Vec3f>(i, j).val[2] = wk[0] * gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[2]
-					+ wk[1] * gmCopy.at<Vec3f>(floor((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[2]
-					+ wk[2] * gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), floor((bkReal.x - N / 2) / (float)N)).val[2]
-					+ wk[3] * gmCopy.at<Vec3f>(ceilf((bkReal.y - N / 2) / (float)N), ceilf((bkReal.x - N / 2) / (float)N)).val[2];
+				gm.at<Vec3f>(i, j).val[1] = wk[0] * (gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[1] + gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0] * gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0] - gm.at<Vec3f>(i, j).val[0] * gm.at<Vec3f>(i, j).val[0])
+					+ wk[1] * (gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[1] + gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0] * gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0] - gm.at<Vec3f>(i, j).val[0] * gm.at<Vec3f>(i, j).val[0])
+					+ wk[2] * (gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[1] + gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0] * gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0] - gm.at<Vec3f>(i, j).val[0] * gm.at<Vec3f>(i, j).val[0])
+					+ wk[3] * (gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[1] + gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0] * gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[0] - gm.at<Vec3f>(i, j).val[0] * gm.at<Vec3f>(i, j).val[0]);
+
+				gm.at<Vec3f>(i, j).val[2] = wk[0] * gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[2]
+					+ wk[1] * gmCopy.at<Vec3f>(floor((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[2]
+					+ wk[2] * gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), floor((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[2]
+					+ wk[3] * gmCopy.at<Vec3f>(ceilf((bkReal.y - (float)(N - 1) / 2) / (float)N), ceilf((bkReal.x - (float)(N - 1) / 2) / (float)N)).val[2];
 			}
 
 			if (gm.at<Vec3f>(i, j).val[1] > thetaV)
@@ -192,15 +207,19 @@ void GaussModel::updateModel(Mat cur, Mat H, Mat& dst)
 			else //初始化candidate
 			{
 				gmCandidate.at<Vec3f>(bkReal.y, bkReal.x).val[0] = avr;
-				gmCandidate.at<Vec3f>(bkReal.y, bkReal.x).val[1] = variance;
+				float var = varNN(cur, bkReal, N, false);
+				gmCandidate.at<Vec3f>(bkReal.y, bkReal.x).val[1] = var;
 				gmCandidate.at<Vec3f>(bkReal.y, bkReal.x).val[2] = 1.f;
 			}
 
 			if (gmCandidate.at<Vec3f>(bkReal.y, bkReal.x).val[2] > gm.at<Vec3f>(bkReal.y, bkReal.x).val[2]) //交换apparent 和 candidate
 			{
-				Vec3f temp = gmCandidate.at<Vec3f>(bkReal.y, bkReal.x);
-				gmCandidate.at<Vec3f>(bkReal.y, bkReal.x) = gm.at<Vec3f>(bkReal.y, bkReal.x);
-				gm.at<Vec3f>(bkReal.y, bkReal.x) = temp;
+				//Vec3f temp = gmCandidate.at<Vec3f>(bkReal.y, bkReal.x);
+				//gmCandidate.at<Vec3f>(bkReal.y, bkReal.x) = gm.at<Vec3f>(bkReal.y, bkReal.x);
+				gm.at<Vec3f>(bkReal.y, bkReal.x) = gmCandidate.at<Vec3f>(bkReal.y, bkReal.x);
+				gmCandidate.at<Vec3f>(bkReal.y, bkReal.x).val[0] = avr;
+				gmCandidate.at<Vec3f>(bkReal.y, bkReal.x).val[1] = variance;
+				gmCandidate.at<Vec3f>(bkReal.y, bkReal.x).val[2] = 1.f;
 			}
 
 			/**************判断前景点和背景点***************/

@@ -95,12 +95,15 @@ bool calH(Mat cur, Mat pre, Mat& H)
 
 		if (features[0].size() > 4)
 		{
-			H = findHomography(features[1], features[0], CV_LMEDS);
+			H = estimateRigidTransform(features[1], features[0], true);
+			//H = findHomography(features[1], features[0], CV_LMEDS);
 		}
 		else //创建单位矩阵
 		{
-			H = Mat(3, 3, CV_64FC1);
-			setIdentity(H);
+			//H = Mat(3, 3, CV_64FC1);
+			//setIdentity(H);
+			double t[2][3] = { { 1, 0, 0 }, { 0, 1, 0 } };
+			H = Mat(2, 3, CV_64FC1, t);
 		}
 		return true;
 	}
