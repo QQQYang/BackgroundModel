@@ -1,30 +1,16 @@
-﻿Build started 2015/12/24 14:08:50.
+﻿Build started 2016/1/5 13:36:16.
      1>Project "C:\Users\admin\Documents\Visual Studio 2013\Projects\STModel\STModel\STModel.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt gauseModel.cpp
-         gauseModel.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp warp.cpp
+         main.cpp
      1>C:\opencv\build\include\opencv2/core/mat.hpp(1965): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
      1>C:\opencv\build\include\opencv2/core/persistence.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
      1>C:\opencv\build\include\opencv2/core/utility.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
-     1>gauseModel.cpp(34): warning C4018: '<' : signed/unsigned mismatch
-     1>gauseModel.cpp(38): warning C4018: '<' : signed/unsigned mismatch
-     1>gauseModel.cpp(59): warning C4018: '<' : signed/unsigned mismatch
-     1>gauseModel.cpp(64): warning C4018: '<' : signed/unsigned mismatch
-     1>gauseModel.cpp(76): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>gauseModel.cpp(77): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>gauseModel.cpp(91): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
-     1>gauseModel.cpp(92): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
-     1>gauseModel.cpp(94): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
-     1>gauseModel.cpp(111): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
-     1>gauseModel.cpp(114): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
-     1>gauseModel.cpp(115): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
-     1>gauseModel.cpp(116): warning C4244: 'argument' : conversion from 'float' to 'int', possible loss of data
-     1>gauseModel.cpp(155): warning C4018: '<' : signed/unsigned mismatch
-     1>gauseModel.cpp(158): warning C4018: '<' : signed/unsigned mismatch
-     1>gauseModel.cpp(160): warning C4244: 'argument' : conversion from 'size_t' to 'float', possible loss of data
-     1>gauseModel.cpp(180): warning C4018: '<' : signed/unsigned mismatch
-     1>gauseModel.cpp(184): warning C4018: '<' : signed/unsigned mismatch
-     1>gauseModel.cpp(187): warning C4244: '=' : conversion from 'float' to 'uchar', possible loss of data
+     1>c:\users\admin\documents\visual studio 2013\projects\stmodel\stmodel\gauseModel.h(20): warning C4305: 'initializing' : truncation from 'double' to 'const float'
+         warp.cpp
+     1>C:\opencv\build\include\opencv2/core/mat.hpp(1965): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+     1>C:\opencv\build\include\opencv2/core/persistence.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+     1>C:\opencv\build\include\opencv2/core/utility.hpp : warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\admin\Documents\Visual Studio 2013\Projects\STModel\Release\STModel.exe" /INCREMENTAL:NO /NOLOGO opencv_ts300.lib opencv_world300.lib opencv_ts300d.lib opencv_world300d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\admin\Documents\Visual Studio 2013\Projects\STModel\Release\STModel.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\admin\Documents\Visual Studio 2013\Projects\STModel\Release\STModel.lib" /MACHINE:X86 /SAFESEH Release\gauseModel.obj
          Release\main.obj
@@ -32,12 +18,10 @@
          Release\pointsMatch.obj
          Release\warp.obj
          Generating code
-     1>c:\users\admin\documents\visual studio 2013\projects\stmodel\stmodel\gausemodel.cpp(79): warning C4756: overflow in constant arithmetic
-     1>c:\users\admin\documents\visual studio 2013\projects\stmodel\stmodel\gausemodel.cpp(79): warning C4756: overflow in constant arithmetic
          Finished generating code
          STModel.vcxproj -> C:\Users\admin\Documents\Visual Studio 2013\Projects\STModel\Release\STModel.exe
      1>Done Building Project "C:\Users\admin\Documents\Visual Studio 2013\Projects\STModel\STModel\STModel.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:02.20
+Time Elapsed 00:00:02.52

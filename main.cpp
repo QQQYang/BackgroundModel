@@ -83,23 +83,10 @@ int main()
 			else
 			{
 				Mat H;
-				pointsMatch p(gModel.gray, curGray, true);
-				if (p.getKeyPoints())
-				{
-					H = findHomography(p.getPoints(p.p2), p.getPoints(p.p1), CV_LMEDS);
-					if (!isInitial)	//初始化
-					{
-						if (gModel.initial(curGray))
-							isInitial = true;
-					}
-					else  //更新
-					{
-						gModel.updateModel(curGray, H, dst);
-						//p.showKeyPoints(dst);
-					}
-				}
-				//if (calH(curGray, preGray, H))
+				//pointsMatch p(preGray, curGray, true);
+				//if (p.getKeyPoints())
 				//{
+				//	H = findHomography(p.getPoints(p.p2), p.getPoints(p.p1), CV_LMEDS);
 				//	if (!isInitial)	//初始化
 				//	{
 				//		if (gModel.initial(curGray))
@@ -108,15 +95,30 @@ int main()
 				//	else  //更新
 				//	{
 				//		gModel.updateModel(curGray, H, dst);
-				//		
+				//		//p.showKeyPoints(dst);
 				//	}
 				//}
+				if (calH(curGray, preGray, H))
+				{
+					if (!isInitial)	//初始化
+					{
+						if (gModel.initial(curGray))
+							isInitial = true;
+					}
+					else  //更新
+					{
+						gModel.updateModel(curGray, H, dst);
+						
+					}
+				}
 			}
 			
 			if (!dst.empty())
+			{
 				imshow("result", dst);
-			imshow("overlap", lap);
-			imshow("gray", gModel.gray);
+			}
+			//imshow("overlap", lap);
+			//imshow("gray", gModel.gray);
 		}
 		swap(preFrame, curFrame);
 #else
